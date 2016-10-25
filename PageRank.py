@@ -57,35 +57,36 @@ def readAirports(fd):
 
 def readRoutes(fd):
     print "Reading Routes file from {0}".format(fd)
-    routesTxt = open(fd, "r");
+    routesTxt = open(fd, "r")
     cont = 0
     for line in routesTxt.readlines():
         try:
             temp = line.split(',')
-
+            #print temp
             if len(temp[2]) != 3 :
                 raise Exception('not an IATA code')
             if len(temp[4]) != 3 :
                 raise Exception('not an IATA code')
             #Obtenir aeroport origen amb codi IATA
-            o_code=temp[2][1:-1]
-            print "Debug 0"
+
+            o_code=temp[2]
             if o_code in airportHash:
                 pass
             else:
                 raise Exception('not airport found')
-            print "Debug 1"
+
             id_o=airportHash[o_code]
             o_airport = airportList[id_o]
             #Obtenir aeroport final amb codi IATA
-            d_code=temp[4][1:-1]
+
+            d_code=temp[4]
             if d_code in airportHash:
                 pass
             else:
                 raise Exception('not airport found')
             id_d=airportHash[d_code]
             d_airport=airportList[id_d]
-            print "Debug 2"
+
             #Comprobar si existeix Edge
             edge = None
             if o_code in d_airport.routesHash:
