@@ -6,8 +6,10 @@ import sys
 
 class Edge:
     def __init__ (self, origin=None):
-        self.origin = 0 # ID (AKA OpenFlights Identifier) -1
-        self.weight = 1 # number of routes from _origin to this (destination)
+
+        self.origin = origin
+        self.weight = 0
+
 
     def __repr__(self):
         return "edge: {0} {1}".format(self.origin, self.weight)
@@ -19,8 +21,8 @@ class Airport:
         self.code = iden
         self.name = name
         self.routes = []
-        self.routeHash = dict() # Value is airport
-        self.outweight = 0 # write appropriate value
+        self.routeHash = dict()
+        self.outweight = 0
 
     def __repr__(self):
         return "{0}\t{2}\t{1}".format(self.code, self.name, self.pageIndex)
@@ -29,6 +31,7 @@ edgeList = [] # list of Edge
 edgeHash = dict() # hash of edge to ease the match
 airportList = [] # list of Airport
 airportHash = dict() # hash key IATA code -> ID (AKA OpenFlights Identifier)
+P = []
 
 def readAirports(fd):
     print "Reading Airport file from {0}".format(fd)
@@ -65,12 +68,21 @@ def readRoutes(fd):
             if len(temp[4]) != 3 :
                 raise Exception('not an IATA code')
             #Obtenir aeroport origen amb codi IATA
-            print "Debug 1"
             o_code=temp[2][1:-1]
+            print "Debug 0"
+            if o_code in airportHash:
+                pass
+            else:
+                raise Exception('not airport found')
+            print "Debug 1"
             id_o=airportHash[o_code]
             o_airport = airportList[id_o]
             #Obtenir aeroport final amb codi IATA
             d_code=temp[4][1:-1]
+            if d_code in airportHash:
+                pass
+            else:
+                raise Exception('not airport found')
             id_d=airportHash[d_code]
             d_airport=airportList[id_d]
             print "Debug 2"
@@ -101,20 +113,50 @@ def readRoutes(fd):
     routesTxt.close()
     print "There were {0} Routes with IATA code".format(cont)
 
-#def computePageRanks():
-    # write your code
+def checkStoppingCondition(A, B):
+    th = 0.0001
+    diff = map(lambda (a,b): abs(a-b), zip(A,B))
+    return all(map(lambda x: x < th, diff))
 
-#def outputPageRanks():
+def computePageRanks():
+    n = len(airportList)
+    P = [1./n]*n
+    L = 0.85
+    stopping_condition = False
 
-    # write your code
+    iterations = 0;
+    while not stopping_condition:
+        Q = [0.]*n
+        for i in range(n):
+            a = airportList[i]
+            sum = 0
+            for r in a.routes:
+                w = r.weight
+                j = r.origin
+                out = airportList[j].outweight
+                sum += P[j] * w / out
+            Q[i] = L*sum + (1-L)/n
+
+        stopping_condition = checkStoppingCondition(P,Q)
+        P = Q
+        iterations += 1
+
+    return iterations
+
+
+def outputPageRanks():
+    l = []
+    for i,p in enumerate(P):
+        l.append((p,airportList[i].name))
+    print l
 
 def main(argv=None):
     readAirports("airports.txt")
     readRoutes("routes.txt")
     time1 = time.time()
-    iterations = 0 #computePageRanks()
+    iterations = computePageRanks()
     time2 = time.time()
-    #outputPageRanks()
+    outputPageRanks()
     print "#Iterations:", iterations
     print "Time of computePageRanks():", time2-time1
 
