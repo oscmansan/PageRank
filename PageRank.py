@@ -83,7 +83,7 @@ def computePageRanks():
         
         stopping_condition = checkStoppingCondition(P,Q)
         P = Q
-        ++iterations
+        iterations += 1
 
     return iterations
 
