@@ -6,8 +6,8 @@ import sys
 
 class Edge:
     def __init__ (self, origin=None):
-        self.origin = ... # write appropriate value
-        self.weight = ... # write appropriate value
+        self.origin = origin
+        self.weight = 0
 
     def __repr__(self):
         return "edge: {0} {1}".format(self.origin, self.weight)
@@ -20,7 +20,7 @@ class Airport:
         self.name = name
         self.routes = []
         self.routeHash = dict()
-        self.outweight =    # write appropriate value
+        self.outweight = 0
 
     def __repr__(self):
         return "{0}\t{2}\t{1}".format(self.code, self.name, self.pageIndex)
@@ -56,11 +56,44 @@ def readRoutes(fd):
     print "Reading Routes file from {0}".format(fd)
     # write your code
 
+def checkStoppingCondition(A, B):
+    th = 0.0001
+    diff = map(lambda (a,b): abs(a-b), zip(A,B))
+    return all(map(lambda x: x < th, diff))
+
 def computePageRanks():
     # write your code
+    n = len(airportList)
+    P = [1./n]*n
+    L = 0.85
+    stopping_condition = False
+
+    iterations = 0;
+    while not stopping_condition:
+        Q = [0.]*n
+        for i in range(n):
+            a = airportList[i]
+            sum = 0
+            for r in a.routes:
+                w = r.weight
+                j = r.origin
+                out = airportList[j].outweight
+                sum += P[j] * w / out
+            Q[i] = L*sum + (1-L)/n
+        
+        stopping_condition = checkStoppingCondition(P,Q)
+        P = Q
+        ++iterations
+
+    return iterations
+
 
 def outputPageRanks():
     # write your code
+    l = []
+    for i,p in enumerate(P):
+        l.append((p,airportList[i].name))
+    print l
 
 def main(argv=None):
     readAirports("airports.txt")
