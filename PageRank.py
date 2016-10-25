@@ -6,7 +6,6 @@ import sys
 
 class Edge:
     def __init__ (self, origin=None):
-
         self.origin = origin
         self.weight = 0
 
@@ -23,6 +22,15 @@ class Airport:
         self.routes = []
         self.routeHash = dict()
         self.outweight = 0
+
+    def getEdge (self, code):
+        edge = self.routeHash.get(code)
+        if edge != None:
+            edge = self.routeHash[code]
+            self.routeHash[code].weight += 1
+        else:
+            edge = Edge(airportHash[code])
+        return edge
 
     def __repr__(self):
         return "{0}\t{2}\t{1}".format(self.code, self.name, self.pageIndex)
@@ -68,34 +76,24 @@ def readRoutes(fd):
             if len(temp[4]) != 3 :
                 raise Exception('not an IATA code')
             #Obtenir aeroport origen amb codi IATA
-
             o_code=temp[2]
             if o_code in airportHash:
                 pass
             else:
-                raise Exception('not airport found')
-
+                raise Exception('not airport found '+o_code)
             id_o=airportHash[o_code]
             o_airport = airportList[id_o]
             #Obtenir aeroport final amb codi IATA
-
             d_code=temp[4]
             if d_code in airportHash:
                 pass
             else:
-                raise Exception('not airport found')
+                raise Exception('not airport found '+d_code)
             id_d=airportHash[d_code]
             d_airport=airportList[id_d]
-
+            #TODO: defaultdict
             #Comprobar si existeix Edge
-            edge = None
-            if o_code in d_airport.routesHash:
-                #Si existeix,
-                edge = d_airport.routesHash[o_code]
-                d_airport.routesHash[o_code].weight += 1
-            else:
-                #Si no, afegim eix i inicialitzem
-                edge = Edge(id_o)
+            edge = d_airport.getEdge(o_code)
             #En aquest punt, tenim segur un Edge
             #Afegim la ruta a la llista de aeroport final
             d_airport.routes.append(edge)
@@ -110,7 +108,6 @@ def readRoutes(fd):
         else:
             #Incrementem comptador
             cont += 1
-            print "Imma here"
     routesTxt.close()
     print "There were {0} Routes with IATA code".format(cont)
 
