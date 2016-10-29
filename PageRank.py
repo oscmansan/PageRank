@@ -7,7 +7,7 @@ import sys
 class Edge:
     def __init__ (self, origin=None):
         self.origin = origin
-        self.weight = 0
+        self.weight = 1
 
 
     def __repr__(self):
@@ -23,20 +23,20 @@ class Airport:
         self.routeHash = dict()
         self.outweight = 0
 
-    def getEdge (self, code):
-        edge = self.routeHash.get(code)
-        if edge != None:
-            edge = self.routeHash[code]
-            self.routeHash[code].weight += 1
+    def addEdge (self, code):
+        if code in self.routeHash:
+            edge = self.routes[self.routeHash[code]]
+            edge.weight += 1
         else:
             edge = Edge(airportHash[code])
-        return edge
+            self.routes.append(edge)
+            self.routeHash[code] = len(self.routes)-1
 
     def __repr__(self):
         return "{0}\t{2}\t{1}".format(self.code, self.name, self.pageIndex)
 
-edgeList = [] # list of Edge
-edgeHash = dict() # hash of edge to ease the match
+#edgeList = [] # list of Edge
+#edgeHash = dict() # hash of edge to ease the match
 airportList = [] # list of Airport
 airportHash = dict() # hash key IATA code -> ID (AKA OpenFlights Identifier)
 P = []
@@ -91,16 +91,9 @@ def readRoutes(fd):
                 raise Exception('not airport found '+d_code)
             id_d=airportHash[d_code]
             d_airport=airportList[id_d]
+
             #TODO: defaultdict
-            #Comprobar si existeix Edge
-            edge = d_airport.getEdge(o_code)
-            #En aquest punt, tenim segur un Edge
-            #Afegim la ruta a la llista de aeroport final
-            d_airport.routes.append(edge)
-            d_airport.routeHash[o_code] = edge
-            #Afegim eix a llista global
-            edgeList.append(edge)
-            edgeHash[o_code+","+d_code] = edge
+            d_airport.addEdge(o_code)
             #Augmentar outweight (rutes sortints) de aeroport origen
             o_airport.outweight += 1
         except Exception as inst:
@@ -112,11 +105,12 @@ def readRoutes(fd):
     print "There were {0} Routes with IATA code".format(cont)
 
 def checkStoppingCondition(A, B):
-    th = 0.0001
+    th = 1e-10
     diff = map(lambda (a,b): abs(a-b), zip(A,B))
     return all(map(lambda x: x < th, diff))
 
 def computePageRanks():
+    global P
     n = len(airportList)
     P = [1./n]*n
     L = 0.85
@@ -151,10 +145,23 @@ def outputPageRanks():
 def main(argv=None):
     readAirports("airports.txt")
     readRoutes("routes.txt")
+    
+    n = len(airportList)
+    out = [0]*n
+    for a in airportList:
+        for r in a.routes:
+            o = r.origin
+            out[o] += r.weight
+    for i,a in enumerate(airportList):
+        assert a.outweight == out[i]
+
     time1 = time.time()
     iterations = computePageRanks()
     time2 = time.time()
-    outputPageRanks()
+
+    print sum(P)
+
+    #outputPageRanks()
     print "#Iterations:", iterations
     print "Time of computePageRanks():", time2-time1
 
