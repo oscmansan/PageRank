@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from collections import namedtuple
+from random import randint
 import time
 import sys
 
@@ -135,18 +136,29 @@ def computePageRanks():
 
     return iterations
 
-
 def outputPageRanks():
     l = []
     for i,p in enumerate(P):
         l.append((p,airportList[i].name))
     print l
 
-def main(argv=None):
-    readAirports("airports.txt")
-    readRoutes("routes.txt")
-    
-    ## Checks ##################################
+def dealWithNullOutWeight(a):
+    # we create outgoing routes to airports that have incoming routes to this airport
+    '''for r in a.routes:
+        j = r.origin
+        o_airport = airportList[j]
+        o_airport.addEdge(a.code)
+        a.outweight += 1
+    print 'Adding {} outgoing routes to {}'.format(len(a.routes),a.code)'''
+
+    # we create an outgoing route to a random airport
+    n = len(airportList)
+    j = randint(0,n-1)
+    d_airport = airportList[j]
+    d_airport.addEdge(a.code)
+    a.outweight += 1.
+
+def checks():
     n = len(airportList)
     aux = [0]*n
     for a in airportList:
@@ -155,11 +167,20 @@ def main(argv=None):
             j = r.origin
             out = airportList[j].outweight
             #aux[j] += w
-            aux[j] += float(w) / float(out)
+            aux[j] += w / out
     for i,a in enumerate(airportList):
         #assert a.outweight == aux[i]
-        if a.outweight > 0: assert (1.0 - aux[i]) < .00000000000001
-    ############################################
+        if a.outweight > 0: assert (1.0 - aux[i]) < .0000000000001
+
+
+def main(argv=None):
+    readAirports("airports.txt")
+    readRoutes("routes.txt")
+
+    for a in airportList:
+        if a.outweight == 0: dealWithNullOutWeight(a)
+    
+    #checks()
 
     time1 = time.time()
     iterations = computePageRanks()
