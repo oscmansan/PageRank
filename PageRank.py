@@ -7,7 +7,7 @@ import sys
 class Edge:
     def __init__ (self, origin=None):
         self.origin = origin
-        self.weight = 1
+        self.weight = 1.
 
 
     def __repr__(self):
@@ -21,12 +21,12 @@ class Airport:
         self.name = name
         self.routes = []
         self.routeHash = dict()
-        self.outweight = 0
+        self.outweight = 0.
 
     def addEdge (self, code):
         if code in self.routeHash:
             edge = self.routes[self.routeHash[code]]
-            edge.weight += 1
+            edge.weight += 1.
         else:
             edge = Edge(airportHash[code])
             self.routes.append(edge)
@@ -95,7 +95,7 @@ def readRoutes(fd):
             #TODO: defaultdict
             d_airport.addEdge(o_code)
             #Augmentar outweight (rutes sortints) de aeroport origen
-            o_airport.outweight += 1
+            o_airport.outweight += 1.
         except Exception as inst:
             pass
         else:
@@ -121,13 +121,13 @@ def computePageRanks():
         Q = [0.]*n
         for i in range(n):
             a = airportList[i]
-            sum = 0
+            s = 0
             for r in a.routes:
                 w = r.weight
                 j = r.origin
                 out = airportList[j].outweight
-                sum += P[j] * w / out
-            Q[i] = L*sum + (1-L)/n
+                s += P[j] * w / out
+            Q[i] = L*s + (1-L)/n
 
         stopping_condition = checkStoppingCondition(P,Q)
         P = Q
@@ -146,14 +146,20 @@ def main(argv=None):
     readAirports("airports.txt")
     readRoutes("routes.txt")
     
+    ## Checks ##################################
     n = len(airportList)
-    out = [0]*n
+    aux = [0]*n
     for a in airportList:
         for r in a.routes:
-            o = r.origin
-            out[o] += r.weight
+            w = r.weight
+            j = r.origin
+            out = airportList[j].outweight
+            #aux[j] += w
+            aux[j] += float(w) / float(out)
     for i,a in enumerate(airportList):
-        assert a.outweight == out[i]
+        #assert a.outweight == aux[i]
+        if a.outweight > 0: assert (1.0 - aux[i]) < .00000000000001
+    ############################################
 
     time1 = time.time()
     iterations = computePageRanks()
