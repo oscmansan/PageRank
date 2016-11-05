@@ -106,7 +106,7 @@ def readRoutes(fd):
     print "There were {0} Routes with IATA code".format(cont)
 
 def checkStoppingCondition(A, B):
-    th = 1e-10
+    th = 1e-15
     diff = map(lambda (a,b): abs(a-b), zip(A,B))
     return all(map(lambda x: x < th, diff))
 
@@ -137,10 +137,11 @@ def computePageRanks():
     return iterations
 
 def outputPageRanks():
-    l = []
-    for i,p in enumerate(P):
-        l.append((p,airportList[i].name))
-    print l
+    n = len(airportList)
+    l = zip(range(n),P)
+    l.sort(key=lambda x: x[1], reverse=True)
+    for i,p in l:
+        print p, airportList[i].name
 
 def dealWithNullOutWeight(a):
     # we create outgoing routes to airports that have incoming routes to this airport
@@ -153,34 +154,62 @@ def dealWithNullOutWeight(a):
 
     # we create an outgoing route to a random airport
     n = len(airportList)
-    j = randint(0,n-1)
-    d_airport = airportList[j]
+    i = randint(0,n-1)
+    d_airport = airportList[i]
     d_airport.addEdge(a.code)
     a.outweight += 1.
 
-def checks():
+def checkNormalizedColumns():
     n = len(airportList)
-    aux = [0]*n
+    L = 0.85
+    aux = [1-L]*n # initialize with matrix (1-L)*(1/n)*J summed by columns
     for a in airportList:
         for r in a.routes:
             w = r.weight
             j = r.origin
             out = airportList[j].outweight
             #aux[j] += w
-            aux[j] += w / out
+            aux[j] += L*(w/out)
     for i,a in enumerate(airportList):
         #assert a.outweight == aux[i]
-        if a.outweight > 0: assert (1.0 - aux[i]) < .0000000000001
+        if abs(1.0 - aux[i]) > .0000000000001: print i, airportList[i].code, aux[i]
+        #assert abs(1.0 - aux[i]) < .0000000000001
+
+def initExample():
+    airports = []
+    A = Airport('AAA','AAA'); airports.append(A)
+    B = Airport('BBB','BBB'); airports.append(B)
+    C = Airport('CCC','CCC'); airports.append(C)
+    D = Airport('DDD','DDD'); airports.append(D)
+    for a in airports:
+        airportList.append(a)
+        airportHash[a.code] = len(airportList)-1
+
+    A.addEdge('AAA')
+    A.addEdge('BBB')
+    B.addEdge('CCC')
+    B.addEdge('DDD')
+    C.addEdge('AAA')
+    D.addEdge('AAA')
+    D.addEdge('BBB')
+    D.addEdge('CCC')
+
+    A.outweight = 3.
+    B.outweight = 2.
+    C.outweight = 2.
+    D.outweight = 1.
 
 
 def main(argv=None):
     readAirports("airports.txt")
     readRoutes("routes.txt")
+    #initExample()
 
-    for a in airportList:
-        if a.outweight == 0: dealWithNullOutWeight(a)
+    for i in range(len(airportList)): 
+        a = airportList[i]
+        if a.outweight == 0.: dealWithNullOutWeight(a)
     
-    #checks()
+    checkNormalizedColumns()
 
     time1 = time.time()
     iterations = computePageRanks()
