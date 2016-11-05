@@ -144,14 +144,6 @@ def outputPageRanks():
         print p, airportList[i].name
 
 def dealWithNullOutWeight(a):
-    # we create outgoing routes to airports that have incoming routes to this airport
-    '''for r in a.routes:
-        j = r.origin
-        o_airport = airportList[j]
-        o_airport.addEdge(a.code)
-        a.outweight += 1
-    print 'Adding {} outgoing routes to {}'.format(len(a.routes),a.code)'''
-
     # we create an outgoing route to a random airport
     n = len(airportList)
     i = randint(0,n-1)
@@ -161,19 +153,15 @@ def dealWithNullOutWeight(a):
 
 def checkNormalizedColumns():
     n = len(airportList)
-    L = 0.85
-    aux = [1-L]*n # initialize with matrix (1-L)*(1/n)*J summed by columns
+    aux = [0]*n
     for a in airportList:
         for r in a.routes:
             w = r.weight
             j = r.origin
             out = airportList[j].outweight
-            #aux[j] += w
-            aux[j] += L*(w/out)
+            aux[j] += w/out
     for i,a in enumerate(airportList):
-        #assert a.outweight == aux[i]
-        if abs(1.0 - aux[i]) > .0000000000001: print i, airportList[i].code, aux[i]
-        #assert abs(1.0 - aux[i]) < .0000000000001
+        assert abs(1.0 - aux[i]) < .00000000000001
 
 def initExample():
     airports = []
