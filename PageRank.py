@@ -40,7 +40,7 @@ class Airport:
 #edgeHash = dict() # hash of edge to ease the match
 airportList = [] # list of Airport
 airportHash = dict() # hash key IATA code -> ID (AKA OpenFlights Identifier)
-P = []
+P = [] # list of weights
 
 def readAirports(fd):
     print "Reading Airport file from {0}".format(fd)
@@ -132,6 +132,7 @@ def computePageRanks():
 
         stopping_condition = checkStoppingCondition(P,Q)
         P = Q
+        #assert abs(1.0 - sum(P)) < .0000000000001
         iterations += 1
 
     return iterations
@@ -161,9 +162,10 @@ def checkNormalizedColumns():
             out = airportList[j].outweight
             aux[j] += w/out
     for i,a in enumerate(airportList):
-        assert abs(1.0 - aux[i]) < .00000000000001
+        assert abs(1.0 - aux[i]) < .0000000000001
 
 def initExample():
+    # toy example from the course slides
     airports = []
     A = Airport('AAA','AAA'); airports.append(A)
     B = Airport('BBB','BBB'); airports.append(B)
@@ -193,9 +195,8 @@ def main(argv=None):
     readRoutes("routes.txt")
     #initExample()
 
-    for i in range(len(airportList)): 
-        a = airportList[i]
-        if a.outweight == 0.: dealWithNullOutWeight(a)
+    for a in airportList: 
+        if a.outweight == 0: dealWithNullOutWeight(a)
     
     checkNormalizedColumns()
 
@@ -203,9 +204,8 @@ def main(argv=None):
     iterations = computePageRanks()
     time2 = time.time()
 
-    print sum(P)
-
-    #outputPageRanks()
+    outputPageRanks()
+    print "Sum of weights:", sum(P)
     print "#Iterations:", iterations
     print "Time of computePageRanks():", time2-time1
 
