@@ -10,11 +10,8 @@ class Edge:
         self.origin = origin
         self.weight = 1.
 
-
     def __repr__(self):
         return "edge: {0} {1}".format(self.origin, self.weight)
-
-    ## write rest of code that you need for this class
 
 class Airport:
     def __init__ (self, iden=None, name=None):
@@ -36,8 +33,6 @@ class Airport:
     def __repr__(self):
         return "{0}\t{2}\t{1}".format(self.code, self.name, self.pageIndex)
 
-#edgeList = [] # list of Edge
-#edgeHash = dict() # hash of edge to ease the match
 airportList = [] # list of Airport
 airportHash = dict() # hash key IATA code -> ID (AKA OpenFlights Identifier)
 P = [] # list of weights
@@ -76,6 +71,7 @@ def readRoutes(fd):
                 raise Exception('not an IATA code')
             if len(temp[4]) != 3 :
                 raise Exception('not an IATA code')
+                
             #Obtenir aeroport origen amb codi IATA
             o_code=temp[2]
             if o_code in airportHash:
@@ -84,6 +80,7 @@ def readRoutes(fd):
                 raise Exception('not airport found '+o_code)
             id_o=airportHash[o_code]
             o_airport = airportList[id_o]
+
             #Obtenir aeroport final amb codi IATA
             d_code=temp[4]
             if d_code in airportHash:
@@ -93,7 +90,7 @@ def readRoutes(fd):
             id_d=airportHash[d_code]
             d_airport=airportList[id_d]
 
-            #TODO: defaultdict
+            #Afegim la ruta a la llista de aeroport final
             d_airport.addEdge(o_code)
             #Augmentar outweight (rutes sortints) de aeroport origen
             o_airport.outweight += 1.
